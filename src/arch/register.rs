@@ -1,4 +1,4 @@
-use crate::arch::register::Flags::{C, H, N, Z};
+use crate::arch::register::Flag::{C, H, Z};
 
 #[derive(Copy, Clone)]
 pub struct Register {
@@ -15,7 +15,7 @@ pub struct Register {
 }
 
 #[derive(Copy, Clone)]
-enum Flags {
+enum Flag {
     // zero flag
     Z = 0b1000_0000,
     // subtraction flag
@@ -38,7 +38,7 @@ impl Register {
             e: 0xD8,
             h: 0x01,
             l: 0x4D,
-            program_counter: 0x0100,
+            program_counter: 0x0000, // start at 0x0000 if care about boot ram, else start at 0x0100
             stack_pointer: 0xFFFE,
         }
     }
@@ -77,5 +77,79 @@ impl Register {
 
     pub fn get_hl(&self) -> u16 {
         u16::from(self.h) << 8 | u16::from(self.l)
+    }
+
+    pub fn set_zero_flag(&mut self, state: bool) {
+        self.set_or_clear(state, Flag::Z)
+    }
+
+    pub fn set_half_carry_flag(&mut self, state: bool) {
+        self.set_or_clear(state, Flag::H)
+    }
+
+    pub fn set_carry_flag(&mut self, state: bool) {
+        self.set_or_clear(state, Flag::C)
+    }
+
+    pub fn set_negative_flag(&mut self, state: bool) {
+        self.set_or_clear(state, Flag::N)
+    }
+
+    pub fn get_zero_flag(&self) -> bool {
+        self.get_flag_bit(Flag::Z)
+    }
+    pub fn get_half_carry_flag(&self) -> bool {
+        self.get_flag_bit(Flag::H)
+    }
+    pub fn get_carry_flag(&self) -> bool {
+        self.get_flag_bit(Flag::C)
+    }
+    pub fn get_negative_flag(&self) -> bool {
+        self.get_flag_bit(Flag::N)
+    }
+
+    fn set_or_clear(&mut self, state: bool, flag: Flag) {
+        if state {
+            self.set_flag_bit(flag)
+        } else {
+            self.clear_flag_bit(flag)
+        }
+    }
+
+    fn set_flag_bit(&mut self, flag: Flag) {
+        self.f |= flag as u8;
+        self.f &= 0xF0;
+    }
+
+    fn clear_flag_bit(&mut self, flag: Flag) {
+        let f = flag as u8;
+        self.f &= !f;
+        self.f &= 0xF0
+    }
+
+    fn get_flag_bit(&self, flag: Flag) -> bool {
+        let f = flag as u8;
+        (self.f & f) != 0
+    }
+}
+
+#[cfg(test)]
+mod register_tests {
+    use crate::arch::register::Register;
+
+    #[test]
+    fn test_set_clear_flag_register() {
+        let mut reg = Register::new();
+        // this is important because of the initial state of the register
+        reg.f = 0x00;
+
+        reg.set_zero_flag(true);
+        reg.set_negative_flag(true);
+        reg.set_half_carry_flag(true);
+
+        assert_eq!(reg.get_carry_flag(), false);
+        assert_eq!(reg.get_negative_flag(), true);
+        reg.set_negative_flag(false);
+        assert_eq!(reg.get_negative_flag(), false);
     }
 }
