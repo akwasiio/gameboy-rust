@@ -91,7 +91,7 @@ impl Register {
         self.set_or_clear(state, Flag::C)
     }
 
-    pub fn set_negative_flag(&mut self, state: bool) {
+    pub fn set_subtract_flag(&mut self, state: bool) {
         self.set_or_clear(state, Flag::N)
     }
 
@@ -104,7 +104,7 @@ impl Register {
     pub fn get_carry_flag(&self) -> bool {
         self.get_flag_bit(Flag::C)
     }
-    pub fn get_negative_flag(&self) -> bool {
+    pub fn get_subtract_flag(&self) -> bool {
         self.get_flag_bit(Flag::N)
     }
 
@@ -144,12 +144,12 @@ mod register_tests {
         reg.f = 0x00;
 
         reg.set_zero_flag(true);
-        reg.set_negative_flag(true);
+        reg.set_subtract_flag(true);
         reg.set_half_carry_flag(true);
 
         assert_eq!(reg.get_carry_flag(), false);
-        assert_eq!(reg.get_negative_flag(), true);
-        reg.set_negative_flag(false);
-        assert_eq!(reg.get_negative_flag(), false);
+        assert_eq!(reg.get_subtract_flag(), true);
+        reg.set_subtract_flag(false);
+        assert_eq!(reg.get_subtract_flag(), false);
     }
 }
