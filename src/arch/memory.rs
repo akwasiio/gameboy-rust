@@ -1,3 +1,4 @@
+#[derive(Copy, Clone, Debug)]
 pub struct Memory {
     ram: [u8; 0xFFFF],
 
@@ -25,6 +26,10 @@ impl Memory {
     pub fn write_word(&mut self, value: u16, address: u16) {
         self.write_byte((value & 0x00FF) as u8, address);
         self.write_byte(((value & 0xFF00) >> 8) as u8, address + 1);
+    }
+
+    pub fn load_boot_rom(&mut self, bytes: Vec<u8>) {
+        self.ram[0x00 .. 0x0100].copy_from_slice(&bytes)
     }
 }
 
