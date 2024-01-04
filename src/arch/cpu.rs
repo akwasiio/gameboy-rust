@@ -418,81 +418,346 @@ impl Cpu {
             0x34 => {}
             0x35 => {}
             0x36 => {
-
+                // LD (HL), imm8
+                self.memory.write_byte(self.get_byte(), self.registers.get_hl());
+                3
             }
             0x37 => {}
             0x38 => {}
             0x39 => {}
-            0x3A => {}
+            0x3A => {
+                // LD A, (HL-)
+                let hl = self.registers.get_hl();
+                self.registers.a = self.memory.read_byte(hl);
+                self.registers.set_hl(hl.wrapping_sub(1));
+                2
+            }
             0x3B => {}
             0x3C => {}
             0x3D => {}
-            0x3E => {}
+            0x3E => {
+                // LD A, d8
+                self.registers.a = self.get_byte();
+                2
+            }
             0x3F => {}
-            0x40 => {}
-            0x41 => {}
-            0x42 => {}
-            0x43 => {}
-            0x44 => {}
-            0x45 => {}
-            0x46 => {}
-            0x47 => {}
-            0x48 => {}
-            0x49 => {}
-            0x4A => {}
-            0x4B => {}
-            0x4C => {}
-            0x4D => {}
-            0x4E => {}
-            0x4F => {}
-            0x50 => {}
-            0x51 => {}
-            0x52 => {}
-            0x53 => {}
-            0x54 => {}
-            0x55 => {}
-            0x56 => {}
-            0x57 => {}
-            0x58 => {}
-            0x59 => {}
-            0x5A => {}
-            0x5B => {}
-            0x5C => {}
-            0x5D => {}
-            0x5E => {}
-            0x5F => {}
-            0x60 => {}
-            0x61 => {}
-            0x62 => {}
-            0x63 => {}
-            0x64 => {}
-            0x65 => {}
-            0x66 => {}
-            0x67 => {}
-            0x68 => {}
-            0x69 => {}
-            0x6A => {}
-            0x6B => {}
-            0x6C => {}
-            0x6D => {}
-            0x6E => {}
-            0x6F => {}
-            0x70 => {}
-            0x71 => {}
-            0x72 => {}
-            0x73 => {}
-            0x74 => {}
-            0x75 => {}
-            0x76 => {}
-            0x77 => {}
-            0x78 => {}
-            0x79 => {}
-            0x7A => {}
-            0x7B => {}
-            0x7C => {}
-            0x7D => {}
-            0x7E => {}
-            0x7F => {}
+            0x40 => {
+                // LD B, B - what's the point?
+                self.registers.b = self.registers.b;
+                1
+            }
+            0x41 => {
+                // LD B, C
+                self.registers.b = self.registers.c;
+                1
+            }
+            0x42 => {
+                // LD B, D
+                self.registers.b = self.registers.d;
+                1
+            }
+            0x43 => {
+                // LD B, E
+                self.registers.b = self.registers.e;
+                1
+            }
+            0x44 => {
+                // LD B, H
+                self.registers.b = self.registers.h;
+                1
+            }
+            0x45 => {
+                // LD B, L
+                self.registers.b = self.registers.l;
+                1
+            }
+            0x46 => {
+                // LD B, (HL)
+                self.registers.b = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x47 => {
+                // LD B, A
+                self.registers.b = self.registers.a;
+                1
+            }
+            0x48 => {
+                // LD C, B
+                self.registers.c = self.registers.b;
+                1
+            }
+            0x49 => {
+                // LD C, C
+                self.registers.c = self.registers.c;
+                1
+            }
+            0x4A => {
+                // LD C, D
+                self.registers.c = self.registers.d;
+                1
+            }
+            0x4B => {
+                // LD C, E
+                self.registers.c = self.registers.e;
+                1
+            }
+            0x4C => {
+                // LD C, H
+                self.registers.c = self.registers.h;
+                1
+            }
+            0x4D => {
+                // LD C, L
+                self.registers.c = self.registers.l;
+                1
+            }
+            0x4E => {
+                // LD C, (HL)
+                self.registers.c = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x4F => {
+                // LD C, A
+                self.registers.c = self.registers.a;
+                1
+            }
+            0x50 => {
+                // LD D, B
+                self.registers.d = self.registers.b;
+                1
+            }
+            0x51 => {
+                // LD D, C
+                self.registers.d = self.registers.c;
+                1
+            }
+            0x52 => {
+                // LD D, D
+                self.registers.d = self.registers.d;
+                1
+            }
+            0x53 => {
+                // LD D, E
+                self.registers.d = self.registers.e;
+                1
+            }
+            0x54 => {
+                // LD D, H
+                self.registers.d = self.registers.h;
+                1
+            }
+            0x55 => {
+                // LD D, L
+                self.registers.d = self.registers.l;
+                1
+            }
+            0x56 => {
+                // LD D, (HL)
+                self.registers.d = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x57 => {
+                // LD D, A
+                self.registers.d = self.registers.a;
+                1
+            }
+            0x58 => {
+                // LD E, B
+                self.registers.e = self.registers.b;
+                1
+            }
+            0x59 => {
+                // LD E, C
+                self.registers.e = self.registers.c;
+                1
+            }
+            0x5A => {
+                // LD E, D
+                self.registers.e = self.registers.d;
+                1
+            }
+            0x5B => {
+                // LD E, E
+                self.registers.e = self.registers.e;
+                1
+            }
+            0x5C => {
+                // LD E, H
+                self.registers.e = self.registers.h;
+                1
+            }
+            0x5D => {
+                // LD E, L
+                self.registers.e = self.registers.l
+            }
+            0x5E => {
+                // LD E, (HL)
+                self.registers.e = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x5F => {
+                // LD E, A
+                self.registers.e = self.registers.a;
+                1
+            }
+            0x60 => {
+                // LD H, B
+                self.registers.h = self.registers.b;
+                1
+            }
+            0x61 => {
+                // LD H, C
+                self.registers.h = self.registers.c;
+                1
+            }
+            0x62 => {
+                // LD H, D
+                self.registers.h = self.registers.d;
+                1
+            }
+            0x63 => {
+                // LD H, E
+                self.registers.h = self.registers.e;
+                1
+            }
+            0x64 => {
+                // LD H, H
+                self.registers.h = self.registers.h;
+                1
+            }
+            0x65 => {
+                // LD H, L
+                self.registers.h = self.registers.l;
+                1
+            }
+            0x66 => {
+                // LD H, (HL)
+                self.registers.h = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x67 => {
+                // LD H, A
+                self.registers.h = self.registers.a;
+                1
+            }
+            0x68 => {
+                // LD L, B
+                self.registers.l = self.registers.b;
+                1
+            }
+            0x69 => {
+                // LD L, C
+                self.registers.l = self.registers.c;
+                1
+            }
+            0x6A => {
+                // LD L, D
+                self.registers.l = self.registers.d;
+                1
+            }
+            0x6B => {
+                // LD L, E
+                self.registers.l = self.registers.e;
+                1
+            }
+            0x6C => {
+                // LD L, H
+                self.registers.l = self.registers.h;
+                1
+            }
+            0x6D => {
+                // LD L, L
+                self.registers.l = self.registers.l;
+                1
+            }
+            0x6E => {
+                // LD L, (HL)
+                self.registers.l = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x6F => {
+                // LD L, A
+                self.registers.l = self.registers.a;
+                1
+            }
+            0x70 => {
+                // LD (HL), B
+                self.memory.write_byte(self.registers.b, self.registers.get_hl());
+                2
+            }
+            0x71 => {
+                // LD (HL), C
+                self.memory.write_byte(self.registers.c, self.registers.get_hl());
+                2
+            }
+            0x72 => {
+                // LD (HL), D
+                self.memory.write_byte(self.registers.d, self.registers.get_hl());
+                2
+            }
+            0x73 => {
+                // LD (HL), E
+                self.memory.write_byte(self.registers.e, self.registers.get_hl());
+                2
+            }
+            0x74 => {
+                // LD (HL), H
+                self.memory.write_byte(self.registers.h, self.registers.get_hl());
+                2
+            }
+            0x75 => {
+                // LD (HL), L
+                self.memory.write_byte(self.registers.l, self.registers.get_hl());
+                2
+            }
+            0x76 => {
+                // HALT
+            }
+            0x77 => {
+                // LD (HL), A
+                self.memory.write_byte(self.registers.a, self.registers.get_hl());
+                2
+            }
+            0x78 => {
+                // LD A, B
+                self.registers.a = self.registers.b;
+                1
+            }
+            0x79 => {
+                // LD A, C
+                self.registers.a = self.registers.c;
+                1
+            }
+            0x7A => {
+                // LD A, D
+                self.registers.a = self.registers.d;
+                1
+            }
+            0x7B => {
+                // LD A, E
+                self.registers.a = self.registers.e;
+                1
+            }
+            0x7C => {
+                // LD A, H
+                self.registers.a = self.registers.h;
+                1
+            }
+            0x7D => {
+                // LD A, L
+                self.registers.a = self.registers.l;
+                1
+            }
+            0x7E => {
+                // LD A, (HL)
+                self.registers.a = self.memory.read_byte(self.registers.get_hl());
+                2
+            }
+            0x7F => {
+                // LD A, A
+                self.registers.a = self.registers.a;
+                1
+            }
             0x80 => {}
             0x81 => {}
             0x82 => {}
@@ -589,9 +854,17 @@ impl Cpu {
             0xDD => {}
             0xDE => {}
             0xDF => {}
-            0xE0 => {}
+            0xE0 => {
+                // LD (imm8), A
+                self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.get_byte()));
+                3
+            }
             0xE1 => {}
-            0xE2 => {}
+            0xE2 => {
+                // LD (C), A
+                self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.registers.c()));
+                2
+            }
             0xE3 => {}
             0xE4 => {}
             0xE5 => {}
@@ -599,15 +872,27 @@ impl Cpu {
             0xE7 => {}
             0xE8 => {}
             0xE9 => {}
-            0xEA => {}
+            0xEA => {
+                // LD (imm16), A
+                self.memory.write_byte(self.registers.a, self.get_word());
+                4
+            }
             0xEB => {}
             0xEC => {}
             0xED => {}
             0xEE => {}
             0xEF => {}
-            0xF0 => {}
+            0xF0 => {
+                // LD A, (imm8)
+                self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.get_byte()));
+                3
+            }
             0xF1 => {}
-            0xF2 => {}
+            0xF2 => {
+                // LD A, (C)
+                self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.registers.a));
+                2
+            }
             0xF3 => {}
             0xF4 => {}
             0xF5 => {}
@@ -615,7 +900,11 @@ impl Cpu {
             0xF7 => {}
             0xF8 => {}
             0xF9 => {}
-            0xFA => {}
+            0xFA => {
+                // LD A, (imm16)
+                self.registers.a = self.memory.read_byte(self.get_word());
+                4
+            }
             0xFB => {}
             0xFC => {}
             0xFD => {}
