@@ -103,6 +103,15 @@ impl Cpu {
         res
     }
 
+    fn add16(&mut self, lhs: u16, rhs: u16) -> u16 {
+        let (res, carry) = lhs.overflowing_add(rhs);
+        self.registers.set_zero_flag(false);
+        self.registers.set_subtract_flag(false);
+        self.registers.set_carry_flag(carry);
+        self.set_inc_half_carry16(lhs, rhs);
+        res
+    }
+
     fn sub8(&mut self, lhs: u8, rhs: u8, apply_carry: bool) -> u8 {
         let c = if apply_carry && self.registers.get_carry_flag() { 1 } else { 0 };
         let res = lhs.wrapping_sub(rhs).wrapping_sub(c);
@@ -140,8 +149,19 @@ impl Cpu {
         res
     }
 
-    fn cp(&mut self, lhs: u8, rhs: u8)  {
+    fn cp(&mut self, lhs: u8, rhs: u8) {
         self.sub8(lhs, rhs, false);
+    }
+
+    fn pop_stack(&mut self) -> u16 {
+        let res = self.memory.read_word(self.registers.stack_pointer);
+        self.registers.stack_pointer += 2;
+        res
+    }
+
+    fn push_to_stack(&mut self, value: u16) {
+        self.registers.stack_pointer -= 2;
+        self.memory.write_word(value, self.registers.stack_pointer);
     }
 
     fn handle_op_codes(&mut self, opcode: u8) -> ClockCycle {
@@ -1169,11 +1189,19 @@ impl Cpu {
                 1
             }
             0xC0 => {}
-            0xC1 => {}
+            0xC1 => {
+                // POP BC
+                self.registers.set_bc(self.pop_stack());
+                3
+            }
             0xC2 => {}
             0xC3 => {}
             0xC4 => {}
-            0xC5 => {}
+            0xC5 => {
+                // PUSH BC
+                self.push_to_stack(self.registers.get_bc());
+                4
+            }
             0xC6 => {
                 // ADD A, imm8
                 self.registers.a = self.add8(self.registers.a, self.get_byte(), false);
@@ -1183,20 +1211,33 @@ impl Cpu {
             0xC8 => {}
             0xC9 => {}
             0xCA => {}
-            0xCB => {}
+            0xCB => {
+                // big if-else
+                let inner_opcode = self.get_byte();
+
+            }
             0xCC => {}
             0xCD => {}
             0xCE => {
                 // ADC A, imm8
                 self.registers.a = self.add8(self.registers.a, self.get_byte(), true);
-                2            }
+                2
+            }
             0xCF => {}
             0xD0 => {}
-            0xD1 => {}
+            0xD1 => {
+                // POP DE
+                self.registers.set_de(self.pop_stack());
+                3
+            }
             0xD2 => {}
             0xD3 => {}
             0xD4 => {}
-            0xD5 => {}
+            0xD5 => {
+                // PUSH DE
+                self.push_to_stack(self.registers.get_de());
+                4
+            }
             0xD6 => {
                 // SUB A, imm8
                 self.registers.a = self.sub8(self.registers.a, self.get_byte(), false);
@@ -1220,7 +1261,11 @@ impl Cpu {
                 self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.get_byte()));
                 3
             }
-            0xE1 => {}
+            0xE1 => {
+                // POP HL
+                self.registers.set_hl(self.pop_stack());
+                3
+            }
             0xE2 => {
                 // LD (C), A
                 self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.registers.c()));
@@ -1228,7 +1273,11 @@ impl Cpu {
             }
             0xE3 => {}
             0xE4 => {}
-            0xE5 => {}
+            0xE5 => {
+                // PUSH HL
+                self.push_to_stack(self.registers.get_hl());
+                4
+            }
             0xE6 => {
                 // AND A, imm8
                 self.registers.a = self.and(self.registers.a, self.get_byte());
@@ -1256,7 +1305,11 @@ impl Cpu {
                 self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.get_byte()));
                 3
             }
-            0xF1 => {}
+            0xF1 => {
+                // POP AF
+                self.registers.set_af(self.pop_stack());
+                3
+            }
             0xF2 => {
                 // LD A, (C)
                 self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.registers.a));
@@ -1264,15 +1317,29 @@ impl Cpu {
             }
             0xF3 => {}
             0xF4 => {}
-            0xF5 => {}
+            0xF5 => {
+                // PUSH AF
+                self.push_to_stack(self.registers.get_af());
+                4
+            }
             0xF6 => {
                 // OR A, imm8
                 self.registers.a = self.or(self.registers.a, self.get_byte());
                 2
             }
             0xF7 => {}
-            0xF8 => {}
-            0xF9 => {}
+            0xF8 => {
+                // LD HL, SP + imm8
+                let imm8 = u16::from(self.get_byte());
+                let r = self.add16(self.registers.stack_pointer, imm8);
+                self.registers.set_hl(r);
+                3
+            }
+            0xF9 => {
+                // LD SP, HL
+                self.registers.stack_pointer = self.registers.get_hl();
+                2
+            }
             0xFA => {
                 // LD A, (imm16)
                 self.registers.a = self.memory.read_byte(self.get_word());
