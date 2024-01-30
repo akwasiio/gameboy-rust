@@ -62,7 +62,7 @@ impl Cpu {
         let a = 1;
         let res = n.wrapping_add(a);
         self.registers.set_zero_flag(res == 0x00);
-        /// https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+        // https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
         self.set_inc_half_carry(a, n);
         self.registers.set_subtract_flag(false);
 
@@ -1188,15 +1188,45 @@ impl Cpu {
                 self.cp(self.registers.a, self.registers.a);
                 1
             }
-            0xC0 => {}
+            0xC0 => {
+                // RET NZ
+                if !self.registers.get_zero_flag() {
+                    self.registers.program_counter = self.pop_stack();
+                    5
+                } else {
+                    2
+                }
+            }
             0xC1 => {
                 // POP BC
                 self.registers.set_bc(self.pop_stack());
                 3
             }
-            0xC2 => {}
-            0xC3 => {}
-            0xC4 => {}
+            0xC2 => {
+                // JP NZ, imm16
+                if !self.registers.get_zero_flag() {
+                    self.registers.program_counter = self.get_word();
+                    4
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
+            0xC3 => {
+                // JP imm16
+                self.registers.program_counter = self.get_word();
+                4
+            }
+            0xC4 => {
+                if !self.registers.get_zero_flag() {
+                    self.push_to_stack(self.registers.program_counter + 2);
+                    self.registers.program_counter = self.get_word();
+                    6
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
             0xC5 => {
                 // PUSH BC
                 self.push_to_stack(self.registers.get_bc());
@@ -1207,32 +1237,104 @@ impl Cpu {
                 self.registers.a = self.add8(self.registers.a, self.get_byte(), false);
                 2
             }
-            0xC7 => {}
-            0xC8 => {}
-            0xC9 => {}
-            0xCA => {}
+            0xC7 => {
+                // RST 0
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x0000;
+                4
+            }
+            0xC8 => {
+                // RET Z
+                if self.registers.get_zero_flag() {
+                    self.registers.program_counter = self.pop_stack();
+                    5
+                } else {
+                    2
+                }
+            }
+            0xC9 => {
+                // RET
+                self.registers.program_counter = self.pop_stack();
+                4
+            }
+            0xCA => {
+                // JP Z, imm16
+                if self.registers.get_zero_flag() {
+                    self.registers.program_counter = self.get_word();
+                    4
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
             0xCB => {
                 // big if-else
                 let inner_opcode = self.get_byte();
-
+                todo!("Implement secondary opcode table")
             }
-            0xCC => {}
-            0xCD => {}
+            0xCC => {
+                // CALL Z, imm16
+                if self.registers.get_zero_flag() {
+                    self.push_to_stack(self.registers.program_counter + 2);
+                    self.registers.program_counter = self.get_word();
+                    6
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
+            0xCD => {
+                // CALL imm16
+                self.push_to_stack(self.registers.program_counter + 2);
+                self.registers.program_counter = self.get_word();
+                6
+            }
             0xCE => {
                 // ADC A, imm8
                 self.registers.a = self.add8(self.registers.a, self.get_byte(), true);
                 2
             }
-            0xCF => {}
-            0xD0 => {}
+            0xCF => {
+                // RST 1
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x08;
+                4
+            }
+            0xD0 => {
+                // RET NC
+                if !self.registers.get_carry_flag() {
+                    self.registers.program_counter = self.pop_stack();
+
+                    5
+                }
+            }
             0xD1 => {
                 // POP DE
                 self.registers.set_de(self.pop_stack());
                 3
             }
-            0xD2 => {}
+            0xD2 => {
+                // JP NC, imm16
+                if !self.registers.get_carry_flag() {
+                    self.registers.program_counter = self.get_word();
+                    4
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
             0xD3 => {}
-            0xD4 => {}
+            0xD4 => {
+                // CALL NC, imm16
+                if !self.registers.get_carry_flag() {
+                    self.push_to_stack(self.registers.program_counter + 2);
+                    self.registers.program_counter = self.get_word();
+                    6
+                } else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
             0xD5 => {
                 // PUSH DE
                 self.push_to_stack(self.registers.get_de());
@@ -1243,19 +1345,65 @@ impl Cpu {
                 self.registers.a = self.sub8(self.registers.a, self.get_byte(), false);
                 2
             }
-            0xD7 => {}
-            0xD8 => {}
-            0xD9 => {}
-            0xDA => {}
-            0xDB => {}
-            0xDC => {}
-            0xDD => {}
+            0xD7 => {
+                // RST 2
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x10;
+                4
+            }
+            0xD8 => {
+                // RST C
+                if self.registers.get_carry_flag() {
+                    self.registers.program_counter = self.pop_stack();
+                    5
+                } else {
+                    2
+                }
+            }
+            0xD9 => {
+                // RETI
+                self.registers.program_counter = self.pop_stack();
+                unimplemented!("feature to enable master interrupt");
+                4
+            }
+            0xDA => {
+                // JP C, imm16
+                if self.registers.get_carry_flag() {
+                    self.registers.program_counter = self.get_word();
+                    4
+                }else {
+                    self.registers.program_counter += 2;
+                    3
+                }
+            }
+            0xDB => {
+                unimplemented!("Nobody is supposed to use instruction 0xDB")
+            }
+            0xDC => {
+                // CALL C, imm16
+                if self.registers.get_carry_flag() {
+                    self.push_to_stack(self.registers.program_counter + 2);
+                    self.registers.program_counter = self.get_word();
+                    6
+                } else {
+                    3
+                }
+            }
+            0xDD => {
+                unimplemented!("Nobody is supposed to use instruction 0xDD")
+
+            }
             0xDE => {
                 // SBC A, imm8
                 self.registers.a = self.sub8(self.registers.a, self.get_byte(), true);
                 2
             }
-            0xDF => {}
+            0xDF => {
+                // RST 3
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x18;
+                4
+            }
             0xE0 => {
                 // LD (imm8), A
                 self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.get_byte()));
@@ -1283,9 +1431,23 @@ impl Cpu {
                 self.registers.a = self.and(self.registers.a, self.get_byte());
                 2
             }
-            0xE7 => {}
-            0xE8 => {}
-            0xE9 => {}
+            0xE7 => {
+                // RST 4
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x20;
+                4
+            }
+            0xE8 => {
+                // ADD SP, imm8
+                let imm8 = u16::from(self.get_byte());
+                self.registers.stack_pointer = self.add16(self.registers.stack_pointer, imm8);
+                4
+            }
+            0xE9 => {
+                // JP HL
+                self.registers.program_counter = self.registers.get_hl();
+                1
+            }
             0xEA => {
                 // LD (imm16), A
                 self.memory.write_byte(self.registers.a, self.get_word());
@@ -1299,7 +1461,12 @@ impl Cpu {
                 self.registers.a = self.xor(self.registers.a, self.get_byte());
                 2
             }
-            0xEF => {}
+            0xEF => {
+                // RST 5
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x28;
+                4
+            }
             0xF0 => {
                 // LD A, (imm8)
                 self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.get_byte()));
@@ -1327,7 +1494,12 @@ impl Cpu {
                 self.registers.a = self.or(self.registers.a, self.get_byte());
                 2
             }
-            0xF7 => {}
+            0xF7 => {
+                // RST 6
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x30;
+                4
+            }
             0xF8 => {
                 // LD HL, SP + imm8
                 let imm8 = u16::from(self.get_byte());
@@ -1353,7 +1525,12 @@ impl Cpu {
                 self.cp(self.registers.a, self.get_byte());
                 2
             }
-            0xFF => {}
+            0xFF => {
+                // RST 7
+                self.push_to_stack(self.registers.program_counter);
+                self.registers.program_counter = 0x38;
+                4
+            }
             _ => panic!("not implemented!")
         }
     }
