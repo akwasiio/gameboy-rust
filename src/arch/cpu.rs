@@ -8,6 +8,8 @@ pub struct Cpu {
     registers: Register,
     memory: Memory,
     is_halted: bool,
+    enable_interrupt: bool,
+    ime: bool,
 }
 
 impl Cpu {
@@ -19,6 +21,8 @@ impl Cpu {
             registers: Register::new(),
             memory,
             is_halted: false,
+            enable_interrupt: false,
+            ime: false,
         }
     }
 
@@ -1389,7 +1393,7 @@ impl Cpu {
                     self.registers.program_counter = self.pop_stack();
                     5
                 } else {
-                  2
+                    2
                 }
             }
             0xD1 => {
@@ -1556,7 +1560,11 @@ impl Cpu {
                 self.registers.a = self.memory.read_byte(0xFF00 | u16::from(self.registers.a));
                 2
             }
-            0xF3 => {}
+            0xF3 => {
+                // DI (disable interrupt)
+                self.enable_interrupt = false;
+                1
+            }
             0xF5 => {
                 // PUSH AF
                 self.push_to_stack(self.registers.get_af());
@@ -1590,7 +1598,11 @@ impl Cpu {
                 self.registers.a = self.memory.read_byte(self.get_word());
                 4
             }
-            0xFB => {}
+            0xFB => {
+                // EI (Enable Interrupt)
+                self.enable_interrupt = true;
+                1
+            }
             0xFE => {
                 // CP A, imm8
                 self.cp(self.registers.a, self.get_byte());
