@@ -7,6 +7,7 @@ pub struct Cpu {
     // accumulator and flags register
     registers: Register,
     memory: Memory,
+    is_halted: bool,
 }
 
 impl Cpu {
@@ -17,6 +18,7 @@ impl Cpu {
         Cpu {
             registers: Register::new(),
             memory,
+            is_halted: false,
         }
     }
 
@@ -856,6 +858,8 @@ impl Cpu {
             }
             0x76 => {
                 // HALT
+                self.is_halted = true;
+                1
             }
             0x77 => {
                 // LD (HL), A
