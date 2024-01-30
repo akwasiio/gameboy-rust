@@ -9,7 +9,6 @@ pub struct Cpu {
     memory: Memory,
 }
 
-
 impl Cpu {
     pub fn new(boot_rom: Vec<u8>) -> Self {
         let mut memory = Memory::new();
@@ -93,12 +92,18 @@ impl Cpu {
     }
 
     fn add8(&mut self, lhs: u8, rhs: u8, apply_carry: bool) -> u8 {
-        let c = if apply_carry && self.registers.get_carry_flag() { 1 } else { 0 };
+        let c = if apply_carry && self.registers.get_carry_flag() {
+            1
+        } else {
+            0
+        };
 
         let res = lhs.wrapping_add(rhs).wrapping_add(c);
         self.registers.set_zero_flag(res == 0x00);
-        self.registers.set_half_carry_flag((lhs & 0x0F) + (rhs & 0x0F) + (c & 0x0F) > 0x0F);
-        self.registers.set_carry_flag(u16::from(lhs) + u16::from(rhs) + u16::from(c) > 0xFF);
+        self.registers
+            .set_half_carry_flag((lhs & 0x0F) + (rhs & 0x0F) + (c & 0x0F) > 0x0F);
+        self.registers
+            .set_carry_flag(u16::from(lhs) + u16::from(rhs) + u16::from(c) > 0xFF);
         self.registers.set_subtract_flag(false);
         res
     }
@@ -113,11 +118,17 @@ impl Cpu {
     }
 
     fn sub8(&mut self, lhs: u8, rhs: u8, apply_carry: bool) -> u8 {
-        let c = if apply_carry && self.registers.get_carry_flag() { 1 } else { 0 };
+        let c = if apply_carry && self.registers.get_carry_flag() {
+            1
+        } else {
+            0
+        };
         let res = lhs.wrapping_sub(rhs).wrapping_sub(c);
         self.registers.set_zero_flag(res == 0x00);
-        self.registers.set_carry_flag(u16::from(c) < u16::from(lhs) + u16::from(c));
-        self.registers.set_half_carry_flag((lhs & 0x0F) < (rhs & 0x0F) + c);
+        self.registers
+            .set_carry_flag(u16::from(c) < u16::from(lhs) + u16::from(c));
+        self.registers
+            .set_half_carry_flag((lhs & 0x0F) < (rhs & 0x0F) + c);
         self.registers.set_subtract_flag(true);
         res
     }
@@ -166,7 +177,7 @@ impl Cpu {
 
     fn handle_op_codes(&mut self, opcode: u8) -> ClockCycle {
         match opcode {
-            0x00 => { 1 }
+            0x00 => 1,
             0x01 => {
                 // LD BC d16
                 // read word
@@ -177,7 +188,8 @@ impl Cpu {
             0x02 => {
                 // LD (BC), A
                 println!("Store the contents of register A in the memory location specified by register pair BC.");
-                self.memory.write_byte(self.registers.a, self.registers.get_bc());
+                self.memory
+                    .write_byte(self.registers.a, self.registers.get_bc());
                 // self.registers.set_bc(self.registers.a as u16);
                 1
             }
@@ -243,7 +255,8 @@ impl Cpu {
             }
             0x0B => {
                 // DEC BC
-                self.registers.set_bc(self.registers.get_bc().wrapping_sub(1));
+                self.registers
+                    .set_bc(self.registers.get_bc().wrapping_sub(1));
                 2
             }
             0x0C => {
@@ -285,12 +298,14 @@ impl Cpu {
             }
             0x12 => {
                 // LD (DE), A
-                self.memory.write_byte(self.registers.a, self.registers.get_de());
+                self.memory
+                    .write_byte(self.registers.a, self.registers.get_de());
                 2
             }
             0x13 => {
                 // INC DE
-                self.registers.set_de(self.registers.get_de().wrapping_add(1));
+                self.registers
+                    .set_de(self.registers.get_de().wrapping_add(1));
                 2
             }
             0x14 => {
@@ -311,7 +326,12 @@ impl Cpu {
             }
             0x17 => {
                 // RLA
-                let res = self.registers.a << 1 | if self.registers.get_carry_flag() { 0x01 } else { 0 };
+                let res = self.registers.a << 1
+                    | if self.registers.get_carry_flag() {
+                        0x01
+                    } else {
+                        0
+                    };
                 let carry = self.registers.a >> 7 & 0x01 == 0x01;
                 self.registers.a = res;
                 self.registers.set_zero_flag(res == 0);
@@ -348,7 +368,8 @@ impl Cpu {
             }
             0x1B => {
                 // DEC DE
-                self.registers.set_de(self.registers.get_de().wrapping_sub(1));
+                self.registers
+                    .set_de(self.registers.get_de().wrapping_sub(1));
                 2
             }
             0x1C => {
@@ -369,7 +390,12 @@ impl Cpu {
             0x1F => {
                 // RRA
                 let carry = self.registers.a >> 7 & 0x01 == 0x01;
-                self.registers.a = self.registers.a >> 1 | if self.registers.get_carry_flag() { 0x80 } else { 0 };
+                self.registers.a = self.registers.a >> 1
+                    | if self.registers.get_carry_flag() {
+                        0x80
+                    } else {
+                        0
+                    };
                 self.registers.set_zero_flag(false);
                 self.registers.set_subtract_flag(false);
                 self.registers.set_half_carry_flag(false);
@@ -395,7 +421,8 @@ impl Cpu {
             }
             0x23 => {
                 // INC HL
-                self.registers.set_hl(self.registers.get_hl().wrapping_add(1));
+                self.registers
+                    .set_hl(self.registers.get_hl().wrapping_add(1));
                 2
             }
             0x24 => {
@@ -417,7 +444,7 @@ impl Cpu {
             }
             0x27 => {
                 // DAA
-                unimplemented!("Yet to understand how this works");
+                todo!("Yet to understand how this works");
                 1
             }
             0x28 => {
@@ -443,7 +470,8 @@ impl Cpu {
             }
             0x2B => {
                 // DEC HL
-                self.registers.set_hl(self.registers.get_hl().wrapping_sub(1));
+                self.registers
+                    .set_hl(self.registers.get_hl().wrapping_sub(1));
 
                 2
             }
@@ -506,7 +534,8 @@ impl Cpu {
             }
             0x36 => {
                 // LD (HL), imm8
-                self.memory.write_byte(self.get_byte(), self.registers.get_hl());
+                self.memory
+                    .write_byte(self.get_byte(), self.registers.get_hl());
                 3
             }
             0x37 => {
@@ -543,7 +572,8 @@ impl Cpu {
             }
             0x3F => {
                 // CCF
-                self.registers.set_carry_flag(!self.registers.get_carry_flag());
+                self.registers
+                    .set_carry_flag(!self.registers.get_carry_flag());
                 self.registers.set_half_carry_flag(false);
                 self.registers.set_subtract_flag(false);
 
@@ -790,32 +820,38 @@ impl Cpu {
             }
             0x70 => {
                 // LD (HL), B
-                self.memory.write_byte(self.registers.b, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.b, self.registers.get_hl());
                 2
             }
             0x71 => {
                 // LD (HL), C
-                self.memory.write_byte(self.registers.c, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.c, self.registers.get_hl());
                 2
             }
             0x72 => {
                 // LD (HL), D
-                self.memory.write_byte(self.registers.d, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.d, self.registers.get_hl());
                 2
             }
             0x73 => {
                 // LD (HL), E
-                self.memory.write_byte(self.registers.e, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.e, self.registers.get_hl());
                 2
             }
             0x74 => {
                 // LD (HL), H
-                self.memory.write_byte(self.registers.h, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.h, self.registers.get_hl());
                 2
             }
             0x75 => {
                 // LD (HL), L
-                self.memory.write_byte(self.registers.l, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.l, self.registers.get_hl());
                 2
             }
             0x76 => {
@@ -823,7 +859,8 @@ impl Cpu {
             }
             0x77 => {
                 // LD (HL), A
-                self.memory.write_byte(self.registers.a, self.registers.get_hl());
+                self.memory
+                    .write_byte(self.registers.a, self.registers.get_hl());
                 2
             }
             0x78 => {
@@ -898,7 +935,11 @@ impl Cpu {
             }
             0x86 => {
                 // ADD A, (HL)
-                self.registers.a = self.add8(self.registers.a, self.memory.read_byte(self.registers.get_hl()), false);
+                self.registers.a = self.add8(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                    false,
+                );
                 2
             }
             0x87 => {
@@ -979,7 +1020,11 @@ impl Cpu {
             }
             0x96 => {
                 // SUB A, (HL)
-                self.registers.a = self.sub8(self.registers.a, self.memory.read_byte(self.registers.get_hl()), false);
+                self.registers.a = self.sub8(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                    false,
+                );
                 2
             }
             0x97 => {
@@ -1060,7 +1105,10 @@ impl Cpu {
             }
             0xA6 => {
                 // AND A, (HL)
-                self.registers.a = self.and(self.registers.a, self.memory.read_byte(self.registers.get_hl()));
+                self.registers.a = self.and(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                );
                 2
             }
             0xA7 => {
@@ -1100,7 +1148,10 @@ impl Cpu {
             }
             0xAE => {
                 // XOR A, (HL)
-                self.registers.a = self.xor(self.registers.a, self.memory.read_byte(self.registers.get_hl()));
+                self.registers.a = self.xor(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                );
                 2
             }
             0xAF => {
@@ -1140,7 +1191,10 @@ impl Cpu {
             }
             0xB6 => {
                 // OR A, (HL)
-                self.registers.a = self.or(self.registers.a, self.memory.read_byte(self.registers.get_hl()));
+                self.registers.a = self.or(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                );
                 2
             }
             0xB7 => {
@@ -1180,7 +1234,10 @@ impl Cpu {
             }
             0xBE => {
                 // CP A, (HL)
-                self.cp(self.registers.a, self.memory.read_byte(self.registers.get_hl()));
+                self.cp(
+                    self.registers.a,
+                    self.memory.read_byte(self.registers.get_hl()),
+                );
                 2
             }
             0xBF => {
@@ -1323,7 +1380,6 @@ impl Cpu {
                     3
                 }
             }
-            0xD3 => {}
             0xD4 => {
                 // CALL NC, imm16
                 if !self.registers.get_carry_flag() {
@@ -1363,7 +1419,7 @@ impl Cpu {
             0xD9 => {
                 // RETI
                 self.registers.program_counter = self.pop_stack();
-                unimplemented!("feature to enable master interrupt");
+                todo!("feature to enable master interrupt");
                 4
             }
             0xDA => {
@@ -1371,13 +1427,10 @@ impl Cpu {
                 if self.registers.get_carry_flag() {
                     self.registers.program_counter = self.get_word();
                     4
-                }else {
+                } else {
                     self.registers.program_counter += 2;
                     3
                 }
-            }
-            0xDB => {
-                unimplemented!("Nobody is supposed to use instruction 0xDB")
             }
             0xDC => {
                 // CALL C, imm16
@@ -1388,10 +1441,6 @@ impl Cpu {
                 } else {
                     3
                 }
-            }
-            0xDD => {
-                unimplemented!("Nobody is supposed to use instruction 0xDD")
-
             }
             0xDE => {
                 // SBC A, imm8
@@ -1406,7 +1455,8 @@ impl Cpu {
             }
             0xE0 => {
                 // LD (imm8), A
-                self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.get_byte()));
+                self.memory
+                    .write_byte(self.registers.a, 0xFF00 | u16::from(self.get_byte()));
                 3
             }
             0xE1 => {
@@ -1416,11 +1466,10 @@ impl Cpu {
             }
             0xE2 => {
                 // LD (C), A
-                self.memory.write_byte(self.registers.a, 0xFF00 | u16::from(self.registers.c()));
+                self.memory
+                    .write_byte(self.registers.a, 0xFF00 | u16::from(self.registers.c()));
                 2
             }
-            0xE3 => {}
-            0xE4 => {}
             0xE5 => {
                 // PUSH HL
                 self.push_to_stack(self.registers.get_hl());
@@ -1453,9 +1502,7 @@ impl Cpu {
                 self.memory.write_byte(self.registers.a, self.get_word());
                 4
             }
-            0xEB => {}
-            0xEC => {}
-            0xED => {}
+
             0xEE => {
                 // XOR A, imm8
                 self.registers.a = self.xor(self.registers.a, self.get_byte());
@@ -1483,7 +1530,6 @@ impl Cpu {
                 2
             }
             0xF3 => {}
-            0xF4 => {}
             0xF5 => {
                 // PUSH AF
                 self.push_to_stack(self.registers.get_af());
@@ -1518,8 +1564,6 @@ impl Cpu {
                 4
             }
             0xFB => {}
-            0xFC => {}
-            0xFD => {}
             0xFE => {
                 // CP A, imm8
                 self.cp(self.registers.a, self.get_byte());
@@ -1531,7 +1575,11 @@ impl Cpu {
                 self.registers.program_counter = 0x38;
                 4
             }
-            _ => panic!("not implemented!")
+            // blank instructions
+            0xD3 | 0xDB | 0xDD | 0xEB | 0xEC | 0xED | 0xF4 | 0xFC | 0xFD => {
+                panic!("Opcode {:#X} is not supposed to be called", opcode);
+            }
+            _ => panic!("not implemented!"),
         }
     }
 }
