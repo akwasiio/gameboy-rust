@@ -547,8 +547,25 @@ impl Cpu {
                 self.registers.set_half_carry_flag(false);
                 1
             }
-            0x38 => {}
-            0x39 => {}
+            0x38 => {
+                // JR C, imm8
+                if self.registers.get_carry_flag() {
+                    let imm8 = self.get_byte() as u16;
+                    self.registers.program_counter =
+                        self.registers.program_counter.wrapping_add(imm8);
+                    3
+                } else {
+                    self.registers.program_counter += 2;
+                    2
+                }
+            }
+            0x39 => {
+                // ADD HL, SP
+                let hl = self.registers.get_hl();
+                let res = self.add16(self.registers.stack_pointer, hl);
+                self.registers.set_hl(res);
+                2
+            }
             0x3A => {
                 // LD A, (HL-)
                 let hl = self.registers.get_hl();
@@ -556,7 +573,11 @@ impl Cpu {
                 self.registers.set_hl(hl.wrapping_sub(1));
                 2
             }
-            0x3B => {}
+            0x3B => {
+                // DEC SP
+                self.registers.stack_pointer = self.registers.stack_pointer.wrapping_sub(1);
+                2
+            }
             0x3C => {
                 // INC A
                 self.increment(self.registers.a);
@@ -728,7 +749,8 @@ impl Cpu {
             }
             0x5D => {
                 // LD E, L
-                self.registers.e = self.registers.l
+                self.registers.e = self.registers.l;
+                1
             }
             0x5E => {
                 // LD E, (HL)
@@ -1365,8 +1387,9 @@ impl Cpu {
                 // RET NC
                 if !self.registers.get_carry_flag() {
                     self.registers.program_counter = self.pop_stack();
-
                     5
+                } else {
+                  2
                 }
             }
             0xD1 => {
