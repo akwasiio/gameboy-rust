@@ -449,8 +449,32 @@ impl Cpu {
                 2
             }
             0x27 => {
-                // DAA
-                todo!("Yet to understand how this works");
+                // DAA (Decimal Adjust Accumulator)
+                // https://blog.ollien.com/posts/gb-daa/
+
+                let mut a = self.registers.a;
+                let carry = self.registers.get_carry_flag();
+                let half_carry = self.registers.get_half_carry_flag();
+                let subtract = self.registers.get_subtract_flag();
+                let mut offset = if carry { 0x60 } else { 0 };
+
+                if ( subtract && a & 0x0F > 0x09) || half_carry {
+                    offset |= 0x06;
+                }
+
+                if (subtract && a > 0x99) || carry {
+                    offset |= 0x60;
+                }
+
+                if subtract {
+                  a = a.wrapping_sub(offset)
+                } else {
+                  a = a.wrapping_add(offset)
+                }
+
+                self.registers.set_zero_flag(a == 0x00);
+                self.registers.set_carry_flag(a >= 0x60);
+                self.registers.set_half_carry_flag(false);
                 1
             }
             0x28 => {
